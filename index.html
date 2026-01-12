@@ -49,6 +49,7 @@ h1{
 .viewer img{
     max-width:90%;
     max-height:90%;
+    transform:scale(1);
 }
 .ui{
     position:fixed;
@@ -86,13 +87,19 @@ const viewer = document.getElementById("viewer");
 const viewImg = document.getElementById("viewImg");
 const downloadBtn = document.getElementById("download");
 
+let zoom = 1;
+
+/* folders.json is in repo root */
 fetch("folders.json")
-.then(r=>r.json())
-.then(folders=>{
-    folders.forEach(folder=>{
+.then(r => r.json())
+.then(folders => {
+    folders.forEach(folder => {
+
         const name = folder.toLowerCase();
-        const iso = `${folder}/${name}-iso.png`;
-        const baseIso = `${folder}/${name}-base-iso.png`;
+
+        /* images are inside maps-renders/FOLDER/ */
+        const iso = `maps-renders/${folder}/${name}-iso.png`;
+        const baseIso = `maps-renders/${folder}/${name}-base-iso.png`;
 
         const card = document.createElement("div");
         card.className = "card";
@@ -100,13 +107,15 @@ fetch("folders.json")
         const img = document.createElement("img");
         img.src = iso;
 
-        card.onmouseenter = ()=> img.src = baseIso;
-        card.onmouseleave = ()=> img.src = iso;
+        card.onmouseenter = () => img.src = baseIso;
+        card.onmouseleave = () => img.src = iso;
 
-        card.onclick = ()=>{
-            viewer.style.display="flex";
+        card.onclick = () => {
+            viewer.style.display = "flex";
             viewImg.src = iso;
-            downloadBtn.onclick = ()=>{
+            zoom = 1;
+            viewImg.style.transform = "scale(1)";
+            downloadBtn.onclick = () => {
                 const a = document.createElement("a");
                 a.href = iso;
                 a.download = `${name}-iso.png`;
@@ -115,8 +124,8 @@ fetch("folders.json")
         };
 
         const label = document.createElement("div");
-        label.className="label";
-        label.textContent=folder;
+        label.className = "label";
+        label.textContent = folder;
 
         card.appendChild(img);
         card.appendChild(label);
@@ -125,11 +134,19 @@ fetch("folders.json")
 });
 
 function closeViewer(){
-    viewer.style.display="none";
+    viewer.style.display = "none";
 }
-viewer.onclick = e=>{
-    if(e.target===viewer) closeViewer();
-};
+
+viewer.addEventListener("click", e => {
+    if(e.target === viewer) closeViewer();
+});
+
+viewer.addEventListener("wheel", e => {
+    e.preventDefault();
+    zoom += e.deltaY * -0.001;
+    zoom = Math.min(Math.max(0.3, zoom), 6);
+    viewImg.style.transform = `scale(${zoom})`;
+},{ passive:false });
 </script>
 
 </body>
